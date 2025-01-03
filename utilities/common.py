@@ -3,6 +3,8 @@ import time
 from datetime import date, datetime 
 from functools import reduce 
 from dateutil.relativedelta import relativedelta
+import pandas as pd 
+import csv 
 
 CR = "\r"
 LF = "\n"
@@ -123,3 +125,25 @@ def month_periods_of(days):
 #   *list(hyphen(*list(ymd(d) for d in x)) for x in month_periods_of(days)), 
 #   glue=LF,  
 # )}""")
+
+UTF8SIG = "utf-8_sig"
+def load_csv(filename, encoding=UTF8SIG, **a):
+  filename = fullpath(filename) 
+  df = pd.read_csv(filename, encoding=encoding, **a) 
+  return df 
+def save_csv(df, filename, encoding=UTF8SIG, quoting=csv.QUOTE_ALL, index=False, **a): 
+  filename = fullpath(filename) 
+  df.to_csv(filename, encoding=encoding, quoting=quoting, index=index, **a)
+  return filename 
+
+### test code: 
+# from random import randint 
+# df = pd.DataFrame(dict(
+#   id=x, 
+#   name=f"name of {x:03}", 
+#   subname=f"subname of {x:03}",
+#   price=randint(500, 4500) 
+# ) for x in range(1, 101))
+# fn = fullpath("test") / "test.csv"
+# save_csv(df, fn)
+# load_csv(fn)
