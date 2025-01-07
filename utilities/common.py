@@ -142,3 +142,9 @@ def save_csv(df, filename, encoding=UTF8SIG, quoting=csv.QUOTE_ALL, index=False,
 # fn = fullpath("test") / "test.csv"
 # save_csv(df, fn)
 # load_csv(fn)
+
+class dotdict(dict):
+  def __setattr__(self, name, value):
+    self[name] = value 
+  def __getattr__(self, name):
+    return self.get(name)
