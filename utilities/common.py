@@ -8,73 +8,68 @@ import csv
 
 CR = "\r"
 LF = "\n"
-SP = " "
+SP = " " 
 SQ = "'"
 DQ = '"'
-log = print 
-def stay(*s, end="", func=str, **a):
-  log(CR, end="") 
-  log(*s, end=end, **a)
-
+PER = "/" 
+BAR = "-" 
+UNDER="_"
+COMMA=","
+log = print
+def stay(*s, end="", mask=50, **a): 
+  log(CR, end="")
+  log(*s, SP*mask, end=end, **a)
 def join(*s, glue=SP, func=str): return glue.join(func(x) for x in s)
-def per   (*s, **a): return join(*s, glue="/", **a)
-def under (*s, **a): return join(*s, glue="_", **a)
-def hyphen(*s, **a): return join(*s, glue="-", **a)
+def comma(*s, glue=COMMA, **a): return join(*s, glue=glue, **a)
+def per(*s, glue=PER, **a): return join(*s, glue=glue, **a)
+def bar(*s, glue=BAR, **a): return join(*s, glue=glue, **a)
+def under(*s, glue=UNDER, **a): return join(*s, glue+glue, **a)
+def sand(s, a, b=None): return join(a, s, a if b is None else b, glue="")
 def num(n): return f"{n:,}"
-def ymd(n, format="%Y%m%d"): return f"{n:{format}}"
-def ymds_of(*d, format="%Y%m%d"): 
-  return hyphen(*list(ymd(x, format=format) for x in d))
-def step_of(a, b, **ka): 
-  if type(a) is int and type(b) is int: 
-    nn = (a, b) 
-  else:
-    nn = (a + 1, len(b))
-  return per(*nn, func=num, **ka)
-
-### test code:
-# a, b, c = "a", "b", "c"
-# s = (a, b, c)
-# d = date.today()
-# n = 12345
-# dd = (d, d + relativedelta(day=31))
-# nn = 1425, 25000
-# log(f"join({join(*list(f'{SQ}{x}{SQ}' for x in s), glue=', ')}) → {DQ}{join(*s)}{DQ}")
-# log(f"per({join(*list(f'{SQ}{x}{SQ}' for x in s), glue=', ')}) → {DQ}{per(*s)}{DQ}")
-# log(f"under({join(*list(f'{SQ}{x}{SQ}' for x in s), glue=', ')}) → {DQ}{under(*s)}{DQ}")
-# log(f"hyphen({join(*list(f'{SQ}{x}{SQ}' for x in s), glue=', ')}) → {DQ}{hyphen(*s)}{DQ}")
-# log(f"num({join(*list(f'{x}' for x in [n]), glue=', ')}) → {DQ}{num(n)}{DQ}")
-# log(f"ymd({join(*list(f'{x}' for x in [d]), glue=', ')}) → {DQ}{ymd(d)}{DQ}")
-# log(f"ymds_of({join(*list(f'{x}' for x in dd), glue=', ')}) → {DQ}{ymds_of(*dd)}{DQ}")
-# log(f"step_of({join(*list(f'{x}' for x in nn), glue=', ')}) → {DQ}{step_of(*nn)}{DQ}")
-# log(f"step_of({join(*list(f'{x}' for x in (0, f'range({n})')), glue=', ')}) → {DQ}{step_of(0, range(n))}{DQ}")
-
-def sand(s, a, b=None): return f"{a}{s}{a if b is None else b}"
+def ymd(d, format="%Y%m%d"): return f"{d:{format}}"
 def sq(s): return sand(s, SQ)
 def dq(s): return sand(s, DQ)
-def paren(s): return sand(s, "(", ")")
-def braces(s): return sand(s, "(", "}")
-def brackets(s): return sand(s, "[", "]")
-def comma(*ss, space=True, lf=False): 
-  return join(*ss, glue=f",{SP if space else ''}{LF if lf else ''}")
-def and_(*ss): return join(*list(paren(x) for x in ss), glue=" and ")
-def  or_(*ss): return join(*list(paren(x) for x in ss), glue= " or ")
-### test code:
-# s, a, b, c = "s", "a", "b", "c"
-# ss = list(f"{x}={x}{x}" for x in (a, b, c))
-# log(f"sand({comma(*list(sq(x) for x in [s, a, b]))}) → {dq(sand(s, a, b))}")
-# log(f"sq({comma(*list(sq(x) for x in [s]))}) → {dq(sq(s))}")
-# log(f"dq({comma(*list(sq(x) for x in [s]))}) → {sq(dq(s))}")
-# log(f"paren({comma(*list(sq(x) for x in [s]))}) → {dq(paren(s))}")
-# log(f"braces({comma(*list(sq(x) for x in [s]))}) → {dq(braces(s))}")
-# log(f"brackets({comma(*list(sq(x) for x in [s]))}) → {dq(brackets(s))}")
-# log(f"and_({comma(*list(sq(x) for x in ss))}) → {dq(and_(*ss))}")
-# log(f" or_({comma(*list(sq(x) for x in ss))}) → {dq( or_(*ss))}")
-# f""" 
-# select {comma(
-#   *list(f"item_{x}" for x in (a, b, c)), 
-#   lf=True
-# )} from table_one
-# """.split(LF)
+def paren(s): return sand(s, *"()")
+def braces(s): return sand(s, *"{}")
+def brackets(s): return sand(s, *"[]")
+def and_(*ss): return join(*ss, func=paren, glue=" and ")
+def  or_(*ss): return join(*ss, func=paren, glue= " or ")
+def ymds_of(*d, format="%Y%m%d"): 
+  return join(*list(ymd(x, format=format) for x in dd), glue=BAR)
+def step_of(a, b, **ka): 
+  if type(a) is int and type(b) is int: 
+    nn = (a, b)
+  else: 
+    nn = (a + 1, len(b))
+  return per(*nn, func=num, **ka)
+## test code:
+n = 10
+dd = (date(2024, 12, 1), date(2024, 12, 31))
+d, _ = dd 
+ss = ["a", "b", "c", "s"]
+a, b, c, s = ss 
+# for i in range(n):
+#   end = "" if i < n - 1 else LF
+#   stay(f"staying", num(i*500), "doing...", end=end)
+#   time.sleep(0.1)
+# log("done!")
+# log(f"ymd({d}, format='%y%m%d') -> {dq(ymd(d, format='%y%m%d'))}")
+# log(f"sq({comma(sq(s))}) -> {dq(sq(s))}")
+# log(f"dq({comma(sq(s))}) -> {sq(dq(s))}")
+# log(f"paren({comma(sq(s))}) -> {dq(paren(s))}")
+# log(f"braces({comma(sq(s))}) -> {dq(braces(s))}")
+# log(f"brackets({comma(sq(s))}) -> {dq(brackets(s))}")
+# log(f"comma({comma(*ss, func=sq)}) -> {dq(comma(*ss))}")
+# log(f"per({comma(*ss, func=sq)}) -> {dq(per(*ss))}")
+# log(f"bar({comma(*ss, func=sq)}) -> {dq(bar(*ss))}")
+# log(f"under({comma(*ss, func=sq)}) -> {dq(under(*ss))}")
+# log(f"and_({comma(*ss, func=sq)}) -> {dq(and_(*ss))}")
+# log(f" or_({comma(*ss, func=sq)}) -> {dq( or_(*ss))}")
+# log(f"ymds_of({comma(*dd)}) -> {dq(ymds_of(*ss))}")
+# log(f"ymds_of({comma(*dd)}, format='%y%m%d) -> {dq(ymds_of(*ss, format='%y%m%d'))}")
+# log(f"step_of(1, 1000) -> {dq(step_of(1, 1000))}")
+# log(f"step_of(0, range(1500)) -> {dq(step_of(0, range(1500)))}")
+# f"""
 
 def fullpath(*path): 
   root = Path(".")
