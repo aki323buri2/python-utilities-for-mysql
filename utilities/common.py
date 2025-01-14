@@ -1,100 +1,104 @@
-# %%
-from pathlib import Path 
-import time 
+from pathlib import Path
 from datetime import date, datetime 
 from functools import reduce 
-from dateutil.relativedelta import relativedelta
+from dateutil.relativedelta import relativedelta 
 import pandas as pd 
-import csv 
+import time 
+import csv
 
 log = print 
-CR = "\r"
-LF = "\n"
-SP = " "
-SQ = "'"
-DQ = '"'
-PER = "/"
-BAR = "-"
-UNDER = "_"
-COMMA = ","
-DOT = "."
-def join(*s, glue=SP, func=str): return glue.join(list(func(x) for x in s))
-def per(*s, glue=PER, **a): return join(*s, glue=glue, **a)
-def bar(*s, glue=BAR, **a): return join(*s, glue=glue, **a)
-def under(*s, glue=UNDER, **a): return join(*s, glue=glue, **a)
-def comma(*s, glue=COMMA, **a): return join(*s, glue=glue, **a)
+CR, LF, SP, SQ, DQ, PER, BAR, UNDER, COMMA, DOT = "\r\n '\"/-_,."
+if False: # test
+  nn = "CR", "LF", "SP", "SQ", "DQ", "PER", "BAR", "UNDER", "COMMA", "DOT"
+  vv = [CR, LF, SP, SQ, DQ, PER, BAR, UNDER, COMMA, DOT]
+  for n, v in zip(nn, vv): 
+    log(f"{n}: {DQ}{v}{DQ}")
+
+
+def join(*s, glue=SP, func=str): return glue.join(func(x) for x in s)
 def sand(s, a, b=None): return join(*(a, s, a if b is None else b), glue="")
 def sq(s): return sand(s, SQ)
 def dq(s): return sand(s, DQ)
+def per(*s): return join(*s, glue=PER)
+def bar(*s): return join(*s, glue=BAR)
+def under(*s): return join(*s, glue=UNDER)
+def comma(*s): return join(*s, glue=COMMA)
+def dot(*s): return join(*s, glue=DOT)
 def paren(s): return sand(s, *"()")
 def braces(s): return sand(s, *"{}")
 def brackets(s): return sand(s, *"[]")
-def and_(*s): return join(*s, glue=" and ", func=paren)
-def  or_(*s): return join(*s, glue= " or ", func=paren)
-def ymd(d, format="%Y%m%d"): return f"{d:{format}}"
+def format(s, format=""): return f"{s:{format}}"
 def num(n, format=","): return f"{n:{format}}"
+def ymd(d, format="%Y%m%d"): return f"{d:{format}}"
 def ymds_of(*d, format="%Y%m%d"): return bar(*(ymd(x, format) for x in d))
-def step_of(a, b): 
+def step_of(a, b):
   if type(a) is int and type(b) is int: 
     nn = (a, b) 
-  else:
+  else: 
     nn = (a + 1, len(b))
-  return per(*nn, func=num)
-## test code:
-# ss = "sabc"
-# s, a, b, c = ss
-# n = 1000
-# dd = date(2025, 1, 1), date(2025, 1, 31)
-# d, _ = dd 
-# nn = 1200, 5000
-# log(f"join({comma(*ss)}) → {dq(join(*ss))}")
-# log(f"per({comma(*ss)}) → {dq(per(*ss))}")
-# log(f"bar({comma(*ss)}) → {dq(bar(*ss))}")
-# log(f"under({comma(*ss)}) → {dq(under(*ss))}")
-# log(f"comma({comma(*ss)}) → {dq(comma(*ss))}")
-# log(f"sq({comma(s)}) → {dq(sq(s))}")
-# log(f"dq({comma(s)}) → {sq(dq(s))}")
-# log(f"paren({comma(s)}) → {dq(paren(s))}")
-# log(f"braces({comma(s)}) → {dq(braces(s))}")
-# log(f"brackets({comma(s)}) → {dq(brackets(s))}")
-# log(f"and_({comma(*ss)}) → {dq(and_(*ss))}")
-# log(f" or_({comma(*ss)}) → {dq( or_(*ss))}")
-# log(f"ymd({comma(d)}) → {dq(ymd(d))}")
-# log(f"ymd({comma(d)},format='%y%m%d') → {dq(ymd(d, format='%y%m%d'))}")
-# log(f"num({comma(n)}) → {dq(num(n))}")
-# log(f"num({comma(n)},format=',.2f') → {dq(num(n, format=',.2f'))}")
-# log(f"ymds_of({comma(*dd)}) → {dq(ymds_of(*dd))}")
-# log(f"ymds_of({comma(*dd)},format='%y%m%d') → {dq(ymds_of(*dd, format='%y%m%d'))}")
-# log(f"step_of(1000,15000) → {dq(step_of(1000, 15000))}")
-# log(f"step_of(0,range(2500)) → {dq(step_of(0, range(2500)))}")
+  return per(*(num(x) for x in nn))
+def and_(*s): return join(*s, glue=" and ", func=paren)
+def  or_(*s): return join(*s, glue= " or ", func=paren)
+if False: # test 
 
+  s, a, b, c = "sabc"
+  d = date.today() 
+  st = d + relativedelta(day=1)
+  ed = d + relativedelta(day=31)
+  dd = (st, ed)
+  n = 12345
+  log(f"sq{paren(comma(*[s]))} → {dq(sq(s))}")
+  log(f"dq{paren(comma(*[s]))} → {sq(dq(s))}")
+  log(f"per{paren(comma(a, b, c))} → {dq(per(a, b, c))}")
+  log(f"bar{paren(comma(a, b, c))} → {dq(bar(a, b, c))}")
+  log(f"under{paren(comma(a, b, c))} → {dq(under(a, b, c))}")
+  log(f"comma{paren(comma(a, b, c))} → {dq(comma(a, b, c))}")
+  log(f"dot{paren(comma(a, b, c))} → {dq(dot(a, b, c))}")
+  log(f"paren{paren(comma(*[s]))} → {dq(paren(s))}")
+  log(f"braces{paren(comma(*[s]))} → {dq(braces(s))}")
+  log(f"brackets{paren(comma(*[s]))} → {dq(brackets(s))}")
+  log(f"format{paren(comma(*[s], f'format={SQ}{SQ}'))} → {dq(format(s))}")
+  log(f"num{paren(comma(*[n]))} → {dq(num(n))}")
+  log(f"num{paren(comma(*[n], f'format={SQ},.02f{SQ}'))} → {dq(num(n, format=',.02f'))}")
+  log(f"ymd{paren(comma(*[d]))} → {dq(ymd(d))}")
+  log(f"ymd{paren(comma(*[d], f'format={SQ}%y%m%d{SQ}'))} → {dq(ymd(d, format='%y%m%d'))}")
+  log(f"ymds_of{paren(comma(*dd))} → {dq(ymds_of(*dd))}")
+  log(f"step_of{paren(comma(n//2, n))} → {dq(step_of(n//2, n))}")
+  log(f"step_of{paren(comma(0, f'range({n})'))} → {dq(step_of(0, range(n)))}")
+  log(f"and_{paren(comma(a, b, c))} → {dq(and_(a, b, c))}")
+  log(f" or_{paren(comma(a, b, c))} → {dq( or_(a, b, c))}")
 
-def stay(*s, end="", mask=60, **a): 
-  log(CR, end="")
+def stay(*s, end="", mask=60, **a):
+  log(CR, end="") 
   log(*s, SP*mask, end=end, **a)
-## test code: 
-# n = 10
-# ls = range(n)
-# for i in ls:
-#   end = "" if i < len(ls) - 1 else LF 
-#   stay(step_of(i, ls), "processing...", end=end)
-#   time.sleep(.5)
-# log(num(n), "done!")
+if False: # test
+  n = 10
+  s = 0.1
+  ls = range(n) 
+  for i in ls:
+    end = "" if i < len(ls) - 1 else LF 
+    stay(step_of(i, ls), "processing..., end=end", end=end)
+    time.sleep(s)
+  log(num(len(ls)), "done!")
 
-def fullpath(*path): 
+
+def fullpath(*path) -> Path:
   root = Path(".")
-  full = reduce(lambda a, b:Path(a) / Path(b), path, root)
-  return full.resolve().absolute() 
-def ensure_dir(*path, **a): 
-  dirname = fullpath(*path) 
-  dirname.mkdir(parents=True, exist_ok=True, **a)
-  return dirname 
-
+  full = reduce(lambda a, b: Path(a) / Path(b), path, root)
+  return full.resolve().absolute()
+def ensure_dir(*path, parents=True, exist_ok=True, **a) -> Path: 
+  dirname = fullpath(*path)
+  dirname.mkdir(parents=parents, exist_ok=exist_ok, **a)
+  return dirname
 def resetfile(filename: Path, content="", mode="w", **a):
   filename = fullpath(filename)
   with filename.open(mode=mode, **a) as f: 
     f.write(content)
   return filename
+
+if False: # test 
+  fn = ensure_dir("test.", "check") / "reset.txt"
+  log(resetfile(fn, content="check!"))
 
 def quoter_start_of(day=date.today()):
   st = day + relativedelta(month=4, day=1)
@@ -121,15 +125,15 @@ def month_periods_of(days):
   starts = list(st + relativedelta(months=x) for x in range(months))
   return list(month_period_of(x) for x in starts)
 
-### test code:
-# days = (date(2024, 1, 1), date(2024, 12, 31))
-# day = days[0]
-# log(f"quoter_period_of({day}) → {quoter_period_of(day)}")
-# log(f"month_period_of({day}) → {month_period_of(day)}")
-# log(f"""month_periods_of({days}) → {LF}{join(
-#   *list(hyphen(*list(ymd(d) for d in x)) for x in month_periods_of(days)), 
-#   glue=LF,  
-# )}""")
+if False: # test
+  days = (date(2024, 1, 1), date(2024, 12, 31))
+  day = days[0]
+  log(f"quoter_period_of({day}) → {quoter_period_of(day)}")
+  log(f"month_period_of({day}) → {month_period_of(day)}")
+  log(f"""month_periods_of({days}) → {LF}{join(
+    *list(ymds_of(*x) for x in month_periods_of(days)), 
+    glue=LF,  
+  )}""")
 
 UTF8SIG = "utf-8_sig"
 def load_csv(filename, encoding=UTF8SIG, **a):
@@ -141,17 +145,17 @@ def save_csv(df, filename, encoding=UTF8SIG, quoting=csv.QUOTE_ALL, index=False,
   df.to_csv(filename, encoding=encoding, quoting=quoting, index=index, **a)
   return filename 
 
-### test code: 
-# from random import randint 
-# df = pd.DataFrame(dict(
-#   id=x, 
-#   name=f"name of {x:03}", 
-#   subname=f"subname of {x:03}",
-#   price=randint(500, 4500) 
-# ) for x in range(1, 101))
-# fn = fullpath("test") / "test.csv"
-# save_csv(df, fn)
-# load_csv(fn)
+if False: ## test code: 
+  from random import randint 
+  df = pd.DataFrame(dict(
+    id=x, 
+    name=f"name of {x:03}", 
+    subname=f"subname of {x:03}",
+    price=randint(500, 4500) 
+  ) for x in range(1, 101))
+  fn = fullpath("test") / "test.csv"
+  save_csv(df, fn)
+  load_csv(fn)
 
 class dotdict(dict):
   def __setattr__(self, name, value):
