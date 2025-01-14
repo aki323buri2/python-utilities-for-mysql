@@ -6,9 +6,9 @@ def pgui_write(s):
   clip.copy(s) 
   pgui.hotkey("ctrl", "v")
 
-## test code: 
-# pgui.hotkey("win")
-# time.sleep(1)
-# pgui_write("リモートデスクトップ接続")
-# time.sleep(1)
-# pgui.hotkey("enter")
+if False: # test code: 
+  pgui.hotkey("win")
+  time.sleep(1)
+  pgui_write("リモートデスクトップ接続")
+  time.sleep(1)
+  pgui.hotkey("enter")
