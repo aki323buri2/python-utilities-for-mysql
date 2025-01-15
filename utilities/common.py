@@ -9,7 +9,7 @@ CR, LF, SP, PER, BAR, UNDER = "\r\n /-_"
 COLON, SEMICOLON, COMMA, DOT, SQ, DQ = ":;,.'\""
 EQ, PLUS, MINUS, ASTA, SLASH = "=+-*/"
 AR_LEFT, AR_BOTTOM, AR_TOP, AR_RIGHT = "←↓↑→"
-TILDE, EXCLAMATION, ATMARD, SHARP, DOLLAR, PERCENT, CARET, AMPERSAND = "~!@#$%^&"
+TILDE, EXCLAMATION, ATMARD, SHARP, DOLLAR, PERCENT, CARET, AMPERSAND, PIPE = "~!@#$%^&|"
 PAREN, BRACES, BRACKETS = "(),{},[]".split(COMMA)
 log = print 
 def join(*s, glue=SP, func=str): return glue.join(func(x) for x in s)
@@ -57,7 +57,7 @@ if False: # test code:
   log(comma_s(*"COLON, SEMICOLON, COMMA, DOT, SQ, DQ".split(", ")), EQ, comma_s(COLON, SEMICOLON, COMMA, DOT, SQ, DQ, func=disp(dq)))
   log(comma_s(*"EQ, PLUS, MINUS, ASTA, SLASH".split(", ")), EQ, comma_s(EQ, PLUS, MINUS, ASTA, SLASH, func=disp(dq)))
   log(comma_s(*"AR_LEFT, AR_BOTTOM, AR_TOP, AR_RIGHT".split(", ")), EQ, comma_s(AR_LEFT, AR_BOTTOM, AR_TOP, AR_RIGHT, func=disp(dq)))
-  log(comma_s(*"TILDE, EXCLAMATION, ATMARD, SHARP, DOLLAR, PERCENT, CARET, AMPERSAND".split(", ")), EQ, comma_s(TILDE, EXCLAMATION, ATMARD, SHARP, DOLLAR, PERCENT, CARET, AMPERSAND, func=disp(dq)))
+  log(comma_s(*"TILDE, EXCLAMATION, ATMARD, SHARP, DOLLAR, PERCENT, CARET, AMPERSAND, PIPE".split(", ")), EQ, comma_s(TILDE, EXCLAMATION, ATMARD, SHARP, DOLLAR, PERCENT, CARET, AMPERSAND, PIPE, func=disp(dq)))
   log(comma_s(*"PAREN,BRACES,BRACKETS".split(COMMA)), EQ, comma_s(PAREN, BRACES, BRACKETS, func=disp(dq)))
   log(f"join{paren(comma_s(a, b, c, func=sq))}", EQ, dq(join(a, b, c)))
   log(f"comma{paren(comma_s(a, b, c, func=sq))}", EQ, dq(comma(a, b, c)))
