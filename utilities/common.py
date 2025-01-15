@@ -5,81 +5,82 @@ from dateutil.relativedelta import relativedelta
 import pandas as pd 
 import time 
 import csv
-
+CR, LF, SP, PER, BAR, UNDER = "\r\n /-_"
+COLON, SEMICOLON, COMMA, DOT, SQ, DQ = ":;,.'\""
+EQ, PLUS, MINUS, ASTA, SLASH = "=+-*/"
+AR_LEFT, AR_BOTTOM, AR_TOP, AR_RIGHT = "←↓↑→"
+TILDE, EXCLAMATION, ATMARD, SHARP, DOLLAR, PERCENT, CARET, AMPERSAND = "~!@#$%^&"
+PAREN, BRACES, BRACKETS = "(),{},[]".split(COMMA)
 log = print 
-CR, LF, SP, SQ, DQ, PER, BAR, UNDER, COMMA, DOT = "\r\n '\"/-_,."
-if False: # test
-  nn = "CR", "LF", "SP", "SQ", "DQ", "PER", "BAR", "UNDER", "COMMA", "DOT"
-  vv = [CR, LF, SP, SQ, DQ, PER, BAR, UNDER, COMMA, DOT]
-  for n, v in zip(nn, vv): 
-    log(f"{n}: {DQ}{v}{DQ}")
-
-
 def join(*s, glue=SP, func=str): return glue.join(func(x) for x in s)
 def sand(s, a, b=None): return join(*(a, s, a if b is None else b), glue="")
-def sq(s): return sand(s, SQ)
-def dq(s): return sand(s, DQ)
-def per(*s): return join(*s, glue=PER)
-def bar(*s): return join(*s, glue=BAR)
-def under(*s): return join(*s, glue=UNDER)
-def comma(*s): return join(*s, glue=COMMA)
-def dot(*s): return join(*s, glue=DOT)
-def paren(s): return sand(s, *"()")
-def braces(s): return sand(s, *"{}")
-def brackets(s): return sand(s, *"[]")
-def format(s, format=""): return f"{s:{format}}"
-def num(n, format=","): return f"{n:{format}}"
-def ymd(d, format="%Y%m%d"): return f"{d:{format}}"
-def ymds_of(*d, format="%Y%m%d"): return bar(*(ymd(x, format) for x in d))
-def step_of(a, b):
-  if type(a) is int and type(b) is int: 
+def comma(*s, **a): return join(*s, glue=COMMA, **a)
+def comma_s(*s, **a): return join(*s, glue=f"{COMMA}{SP}", **a)
+def sq(s, **a): return sand(s, SQ, **a)
+def dq(s, **a): return sand(s, DQ, **a)
+def paren(s, **a): return sand(s, *PAREN, **a)
+def braces(s, **a): return sand(s, *BRACES, **a)
+def brackets(s, **a): return sand(s, *BRACKETS, **a)
+def per(*s, **a): return join(*s, glue=PER, **a)
+def bar(*s, **a): return join(*s, glue=BAR, **a)
+def under(*s, **a): return join(*s, glue=UNDER, **a)
+def and_(*s, func=paren, **a): return join(*s, glue=" AND ", func=func, **a) 
+def  or_(*s, func=paren, **a): return join(*s, glue= " OR ", func=func, **a) 
+def ymd(d, format_spec="%Y%m%d"): return format(d, format_spec)
+def num(n, format_spec=","): return format(n, format_spec)
+def ymds_of(*d, format_spec="%Y%m%d"): return bar(*d, func=lambda d: ymd(d, format_spec))
+def step_of(a, b, format_spec=","): 
+  if type(a) is int and type(b) is int:
     nn = (a, b) 
   else: 
     nn = (a + 1, len(b))
-  return per(*(num(x) for x in nn))
-def and_(*s): return join(*s, glue=" and ", func=paren)
-def  or_(*s): return join(*s, glue= " or ", func=paren)
-if False: # test 
+  return per(*nn, func=lambda n: num(n, format_spec))
 
-  s, a, b, c = "sabc"
+def stay(*s, end="", mask=60, **a):
+  log(CR, end="")
+  log(*s, SP*mask, end=end, **a)
+
+if False: # test code:
+  s, a, b, c = "sabc" 
   d = date.today() 
   st = d + relativedelta(day=1)
   ed = d + relativedelta(day=31)
   dd = (st, ed)
   n = 12345
-  log(f"sq{paren(comma(*[s]))} → {dq(sq(s))}")
-  log(f"dq{paren(comma(*[s]))} → {sq(dq(s))}")
-  log(f"per{paren(comma(a, b, c))} → {dq(per(a, b, c))}")
-  log(f"bar{paren(comma(a, b, c))} → {dq(bar(a, b, c))}")
-  log(f"under{paren(comma(a, b, c))} → {dq(under(a, b, c))}")
-  log(f"comma{paren(comma(a, b, c))} → {dq(comma(a, b, c))}")
-  log(f"dot{paren(comma(a, b, c))} → {dq(dot(a, b, c))}")
-  log(f"paren{paren(comma(*[s]))} → {dq(paren(s))}")
-  log(f"braces{paren(comma(*[s]))} → {dq(braces(s))}")
-  log(f"brackets{paren(comma(*[s]))} → {dq(brackets(s))}")
-  log(f"format{paren(comma(*[s], f'format={SQ}{SQ}'))} → {dq(format(s))}")
-  log(f"num{paren(comma(*[n]))} → {dq(num(n))}")
-  log(f"num{paren(comma(*[n], f'format={SQ},.02f{SQ}'))} → {dq(num(n, format=',.02f'))}")
-  log(f"ymd{paren(comma(*[d]))} → {dq(ymd(d))}")
-  log(f"ymd{paren(comma(*[d], f'format={SQ}%y%m%d{SQ}'))} → {dq(ymd(d, format='%y%m%d'))}")
-  log(f"ymds_of{paren(comma(*dd))} → {dq(ymds_of(*dd))}")
-  log(f"step_of{paren(comma(n//2, n))} → {dq(step_of(n//2, n))}")
-  log(f"step_of{paren(comma(0, f'range({n})'))} → {dq(step_of(0, range(n)))}")
-  log(f"and_{paren(comma(a, b, c))} → {dq(and_(a, b, c))}")
-  log(f" or_{paren(comma(a, b, c))} → {dq( or_(a, b, c))}")
+  def disp(func=lambda x:x): 
+    specials = {
+      "\r": "\\r", 
+      "\n": "\\n", 
+    }
+    return lambda s: func(specials.get(s, s))
+  log(comma_s(*"CR, LF, SP, PER, BAR, UNDER".split(", ")), EQ, comma_s(CR, LF, SP, PER, BAR, UNDER, func=disp(dq)))
+  log(comma_s(*"COLON, SEMICOLON, COMMA, DOT, SQ, DQ".split(", ")), EQ, comma_s(COLON, SEMICOLON, COMMA, DOT, SQ, DQ, func=disp(dq)))
+  log(comma_s(*"EQ, PLUS, MINUS, ASTA, SLASH".split(", ")), EQ, comma_s(EQ, PLUS, MINUS, ASTA, SLASH, func=disp(dq)))
+  log(comma_s(*"AR_LEFT, AR_BOTTOM, AR_TOP, AR_RIGHT".split(", ")), EQ, comma_s(AR_LEFT, AR_BOTTOM, AR_TOP, AR_RIGHT, func=disp(dq)))
+  log(comma_s(*"TILDE, EXCLAMATION, ATMARD, SHARP, DOLLAR, PERCENT, CARET, AMPERSAND".split(", ")), EQ, comma_s(TILDE, EXCLAMATION, ATMARD, SHARP, DOLLAR, PERCENT, CARET, AMPERSAND, func=disp(dq)))
+  log(comma_s(*"PAREN,BRACES,BRACKETS".split(COMMA)), EQ, comma_s(PAREN, BRACES, BRACKETS, func=disp(dq)))
+  log(f"join{paren(comma_s(a, b, c, func=sq))}", EQ, dq(join(a, b, c)))
+  log(f"comma{paren(comma_s(a, b, c, func=sq))}", EQ, dq(comma(a, b, c)))
+  log(f"comma_s{paren(comma_s(a, b, c, func=sq))}", EQ, dq(comma_s(a, b, c)))
+  log(f"par{paren(comma_s(a, b, c, func=sq))}", EQ, dq(per(a, b, c)))
+  log(f"bar{paren(comma_s(a, b, c, func=sq))}", EQ, dq(bar(a, b, c)))
+  log(f"under{paren(comma_s(a, b, c, func=sq))}", EQ, dq(under(a, b, c)))
+  log(f"and_{paren(comma_s(a, b, c, func=sq))}", EQ, dq(and_(a, b, c)))
+  log(f" or_{paren(comma_s(a, b, c, func=sq))}", EQ, dq( or_(a, b, c)))
+  log(f"num{paren(comma_s(n))}", EQ, dq(num(n)))
+  log(f"ymd{paren(comma_s(d))}", EQ, dq(ymd(d)))
+  log(f"ymds_of{paren(comma_s(*dd))}", EQ, dq(ymds_of(*dd)))
+  log(f"step_of{paren(comma_s(n // 10, n))}", EQ, dq(step_of(n // 10 , n)))
+  log(f"step_of{paren(comma_s(0, f'range({n})'))}", EQ, dq(step_of(0, range(n))))
 
-def stay(*s, end="", mask=60, **a):
-  log(CR, end="") 
-  log(*s, SP*mask, end=end, **a)
-if False: # test
-  n = 10
-  s = 0.1
-  ls = range(n) 
-  for i in ls:
-    end = "" if i < len(ls) - 1 else LF 
-    stay(step_of(i, ls), "processing..., end=end", end=end)
-    time.sleep(s)
-  log(num(len(ls)), "done!")
+  n = 100
+  sleep = 2 / n 
+  for i in range(n):
+    end = "" if i < n - 1 else LF 
+    stay(num(i), "doing...", end=end)
+    time.sleep(sleep)
+  log(num(n), "done!")
+
 
 
 def fullpath(*path) -> Path:
