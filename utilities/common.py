@@ -1,165 +1,138 @@
-from pathlib import Path
+from pathlib import Path 
 from datetime import date, datetime 
-from functools import reduce 
 from dateutil.relativedelta import relativedelta 
+from functools import reduce 
+import time, csv
 import pandas as pd 
-import time 
-import csv
+
 CR, LF, SP, PER, BAR, UNDER = "\r\n /-_"
-COLON, SEMICOLON, COMMA, DOT, SQ, DQ = ":;,.'\""
-EQ, PLUS, MINUS, ASTA, SLASH = "=+-*/"
-AR_LEFT, AR_BOTTOM, AR_TOP, AR_RIGHT = "←↓↑→"
-TILDE, EXCLAMATION, ATMARD, SHARP, DOLLAR, PERCENT, CARET, AMPERSAND, PIPE = "~!@#$%^&|"
+COMMA, PERIOD, LT, GT = ",.<>"
+SQ, DQ, EXCLAMATION, AT, SHARP = "'\"!@#" 
+DOLLAR, PERCENT, CARET, AMP, ASTA, = "$%^&*"
+AR_LEFT, AR_DOWN, AR_TOP, AR_RIGHT = "←↓↑→"
+EQ, PLUS = "=+"
 PAREN, BRACES, BRACKETS = "(),{},[]".split(COMMA)
+COMMA_S = f"{COMMA}{SP}"
+CRR, LFF = "\\r,\\n".split(COMMA)
+
 log = print 
-def join(*s, glue=SP, func=str): return glue.join(func(x) for x in s)
-def sand(s, a, b=None): return join(*(a, s, a if b is None else b), glue="")
+def stay(*s, end="", mask=60, **a): 
+  log(CR, end="") 
+  log(*s, SP*mask, end=end, **a)
+def join(*s, glue=SP, func=str): return glue.join(func(x) for x in s) 
+def sand(s, a, b=None): return join(a, s, a if b is None else b, glue="")
+def sq(s, **a): return sand(s, SQ)
+def dq(s, **a): return sand(s, DQ)
+def paren(s, **a): return sand(s, *PAREN)
+def braces(s, **a): return sand(s, *BRACES)
+def brackets(s, **a): return sand(s, *BRACKETS)
 def comma(*s, **a): return join(*s, glue=COMMA, **a)
-def comma_s(*s, **a): return join(*s, glue=f"{COMMA}{SP}", **a)
-def sq(s, **a): return sand(s, SQ, **a)
-def dq(s, **a): return sand(s, DQ, **a)
-def paren(s, **a): return sand(s, *PAREN, **a)
-def braces(s, **a): return sand(s, *BRACES, **a)
-def brackets(s, **a): return sand(s, *BRACKETS, **a)
+def comma_s(*s, **a): return join(*s, glue=COMMA_S, **a)
 def per(*s, **a): return join(*s, glue=PER, **a)
 def bar(*s, **a): return join(*s, glue=BAR, **a)
 def under(*s, **a): return join(*s, glue=UNDER, **a)
-def and_(*s, func=paren, **a): return join(*s, glue=" and ", func=func, **a) 
-def  or_(*s, func=paren, **a): return join(*s, glue= " or ", func=func, **a) 
-def ymd(d, format_spec="%Y%m%d"): return format(d, format_spec)
-def num(n, format_spec=","): return format(n, format_spec)
-def ymds_of(*d, format_spec="%Y%m%d"): return bar(*d, func=lambda d: ymd(d, format_spec))
-def step_of(a, b, format_spec=","): 
-  if type(a) is int and type(b) is int:
+def ymd(d, spec="%Y%m%d"): return format(d, spec)
+def num(n, spec=","): return format(n, spec)
+def ymds_of(*d, spec="%Y%m%d", glue=BAR, **a): return join(*d, glue=glue, func=lambda x:ymd(x, spec), **a) 
+def step_of(a, b, spec=",", glue=PER, **aa):
+  if type(a) is int and type(b) is int: 
     nn = (a, b) 
   else: 
-    nn = (a + 1, len(b))
-  return per(*nn, func=lambda n: num(n, format_spec))
+    nn = (a + 1, len(b)) 
+  return join(*nn, glue=glue, func=lambda x:num(x, spec=spec), **aa)
 
-def stay(*s, end="", mask=60, **a):
-  log(CR, end="")
-  log(*s, SP*mask, end=end, **a)
+if False: 
+  s, a, b, c = "sabc"
+  d = date.today() 
+  n = 12345
+  dd = list(d + relativedelta(day=x) for x in (1, 31))
+  log(sq(s), dq(s), paren(s), braces(s), brackets(s))
+  log(ymds_of(*dd))
+  log(step_of(n//100, n))
+  log(step_of(n//100, range(n)))
 
-if False: # test code:
-  s, a, b, c = "sabc" 
+if False: # test code: 
+  todo = range(100)
+  done = 0 
+  for i, _ in enumerate(todo):
+    end = "" if i < len(arr) - 1 else LF 
+    stay(step_of(i, todo), "doing...", end=end)
+    done += 1
+    time.sleep(2 / len(todo))
+  log(step_of(done, len(todo)), "done!")
+
+def fullpath(*path) -> Path: 
+  root = Path(".") 
+  fn = reduce(lambda a, b: Path(a) / Path(b), path, root)
+  return fn.resolve().absolute()
+def ensure_dir(*path, parents=True, exist_ok=True, **a) -> Path: 
+  dn = fullpath(*path) 
+  dn.mkdir(parents=parents, exist_ok=exist_ok, **a) 
+  return dn
+def ensure_file(*path, **a) -> Path: 
+  fn = fullpath(*path) 
+  ensure_dir(fn.parent)
+  if not fn.exists(): 
+    fn.touch()  
+  return fn 
+
+if False: # test code: 
+  root = fullpath(".")
+  fn = fullpath("test", "check", "check.txt")
+  log(ensure_file(fn))
+  with fn.open(mode="w") as f:
+    f.write("check!!")
+
+def fiscal_year_of(day=date.today) -> date: 
+  years = 0 if day > day + relativedelta(month=4) else -1
+  st =  day + relativedelta(month=4, years=years)
+  return (st, st + relativedelta(years=1, days=-1))
+def months_of(st: date, ed: date) -> list[date, date]: 
+  st = st + relativedelta(day=1)
+  ed = ed + relativedelta(day=31)
+  diff = relativedelta(ed, st).months + 1 
+  first_days = list(st + relativedelta(months=x) for x in range(diff)) 
+  return list((x, x + relativedelta(months=1, days=-1)) for x in first_days)
+
+if False: # test code: 
   d = date.today() 
   st = d + relativedelta(day=1)
-  ed = d + relativedelta(day=31)
-  dd = (st, ed)
-  n = 12345
-  def disp(func=lambda x:x): 
-    specials = {
-      "\r": "\\r", 
-      "\n": "\\n", 
-    }
-    return lambda s: func(specials.get(s, s))
-  log(comma_s(*"CR, LF, SP, PER, BAR, UNDER".split(", ")), EQ, comma_s(CR, LF, SP, PER, BAR, UNDER, func=disp(dq)))
-  log(comma_s(*"COLON, SEMICOLON, COMMA, DOT, SQ, DQ".split(", ")), EQ, comma_s(COLON, SEMICOLON, COMMA, DOT, SQ, DQ, func=disp(dq)))
-  log(comma_s(*"EQ, PLUS, MINUS, ASTA, SLASH".split(", ")), EQ, comma_s(EQ, PLUS, MINUS, ASTA, SLASH, func=disp(dq)))
-  log(comma_s(*"AR_LEFT, AR_BOTTOM, AR_TOP, AR_RIGHT".split(", ")), EQ, comma_s(AR_LEFT, AR_BOTTOM, AR_TOP, AR_RIGHT, func=disp(dq)))
-  log(comma_s(*"TILDE, EXCLAMATION, ATMARD, SHARP, DOLLAR, PERCENT, CARET, AMPERSAND, PIPE".split(", ")), EQ, comma_s(TILDE, EXCLAMATION, ATMARD, SHARP, DOLLAR, PERCENT, CARET, AMPERSAND, PIPE, func=disp(dq)))
-  log(comma_s(*"PAREN,BRACES,BRACKETS".split(COMMA)), EQ, comma_s(PAREN, BRACES, BRACKETS, func=disp(dq)))
-  log(f"join{paren(comma_s(a, b, c, func=sq))}", EQ, dq(join(a, b, c)))
-  log(f"comma{paren(comma_s(a, b, c, func=sq))}", EQ, dq(comma(a, b, c)))
-  log(f"comma_s{paren(comma_s(a, b, c, func=sq))}", EQ, dq(comma_s(a, b, c)))
-  log(f"par{paren(comma_s(a, b, c, func=sq))}", EQ, dq(per(a, b, c)))
-  log(f"bar{paren(comma_s(a, b, c, func=sq))}", EQ, dq(bar(a, b, c)))
-  log(f"under{paren(comma_s(a, b, c, func=sq))}", EQ, dq(under(a, b, c)))
-  log(f"and_{paren(comma_s(a, b, c, func=sq))}", EQ, dq(and_(a, b, c)))
-  log(f" or_{paren(comma_s(a, b, c, func=sq))}", EQ, dq( or_(a, b, c)))
-  log(f"num{paren(comma_s(n))}", EQ, dq(num(n)))
-  log(f"ymd{paren(comma_s(d))}", EQ, dq(ymd(d)))
-  log(f"ymds_of{paren(comma_s(*dd))}", EQ, dq(ymds_of(*dd)))
-  log(f"step_of{paren(comma_s(n // 10, n))}", EQ, dq(step_of(n // 10 , n)))
-  log(f"step_of{paren(comma_s(0, f'range({n})'))}", EQ, dq(step_of(0, range(n))))
+  ed = st + relativedelta(years=1, days=-1)
+  months = months_of(st, ed)
+  for st, _ in months:
+    log(st, AR_RIGHT, fiscal_year_of(st))
 
-  n = 100
-  sleep = 2 / n 
-  for i in range(n):
-    end = "" if i < n - 1 else LF 
-    stay(num(i), "doing...", end=end)
-    time.sleep(sleep)
-  log(num(n), "done!")
-
-
-
-def fullpath(*path) -> Path:
-  root = Path(".")
-  full = reduce(lambda a, b: Path(a) / Path(b), path, root)
-  return full.resolve().absolute()
-def ensure_dir(*path, parents=True, exist_ok=True, **a) -> Path: 
-  dirname = fullpath(*path)
-  dirname.mkdir(parents=parents, exist_ok=exist_ok, **a)
-  return dirname
-def resetfile(filename: Path, content="", mode="w", **a):
-  filename = fullpath(filename)
-  with filename.open(mode=mode, **a) as f: 
-    f.write(content)
-  return filename
-
-if False: # test 
-  fn = ensure_dir("test.", "check") / "reset.txt"
-  log(resetfile(fn, content="check!"))
-
-def quoter_start_of(day=date.today()):
-  st = day + relativedelta(month=4, day=1)
-  if st > day: 
-    st += relativedelta(years=-1)
-  return st 
-def quoter_end_of(day=date.today()):
-  st = quoter_start_of(day)
-  return st + relativedelta(years=1, days=-1)
-def quoter_period_of(day=date.today()):
-  return (quoter_start_of(day), quoter_end_of(day))
-
-def month_start_of(day=date.today()): 
-  return day + relativedelta(day=1)
-def month_end_of(day=date.today()): 
-  return day + relativedelta(day=31)
-def month_period_of(day=date.today()):
-  return (month_start_of(day), month_end_of(day))
-def month_periods_of(days):
-  st, ed = days 
-  st = month_start_of(st)
-  ed = month_end_of(ed)
-  months = relativedelta(ed, st).months + 1 
-  starts = list(st + relativedelta(months=x) for x in range(months))
-  return list(month_period_of(x) for x in starts)
-
-if False: # test
-  days = (date(2024, 1, 1), date(2024, 12, 31))
-  day = days[0]
-  log(f"quoter_period_of({day}) → {quoter_period_of(day)}")
-  log(f"month_period_of({day}) → {month_period_of(day)}")
-  log(f"""month_periods_of({days}) → {LF}{join(
-    *list(ymds_of(*x) for x in month_periods_of(days)), 
-    glue=LF,  
-  )}""")
-
+SJIS = "cp931"
+UTF8 = "utf-8" 
 UTF8SIG = "utf-8_sig"
-def load_csv(filename, encoding=UTF8SIG, **a):
-  filename = fullpath(filename) 
-  df = pd.read_csv(filename, encoding=encoding, **a) 
+def load_csv(*path, encoding=UTF8SIG, **a): 
+  fn = fullpath(*path) 
+  df = pd.read_csv(fn, encoding=encoding, **a) 
   return df 
-def save_csv(df, filename, encoding=UTF8SIG, quoting=csv.QUOTE_ALL, index=False, **a): 
-  filename = fullpath(filename) 
-  df.to_csv(filename, encoding=encoding, quoting=quoting, index=index, **a)
-  return filename 
+def save_csv(df, *path, encoding=UTF8SIG, quoting=csv.QUOTE_ALL, index=False, **a) -> Path: 
+  fn = fullpath(*path)
+  df.to_csv(fn, encoding=encoding, quoting=quoting, index=index, **a) 
+  return fn 
 
-if False: ## test code: 
+if False: # test code: 
   from random import randint 
   df = pd.DataFrame(dict(
     id=x, 
-    name=f"name of {x:03}", 
-    subname=f"subname of {x:03}",
-    price=randint(500, 4500) 
-  ) for x in range(1, 101))
-  fn = fullpath("test") / "test.csv"
-  save_csv(df, fn)
-  load_csv(fn)
+    value=randint(500, 1000), 
+  ) for x in range(100))
+  fn = ensure_file("test", "save_csv_check", "check.csv")
+  log(dq(save_csv(df, fn)))
+  log(load_csv(fn))
 
 class dotdict(dict):
   def __setattr__(self, name, value):
     self[name] = value 
-  def __getattr__(self, name):
+  def __getattr__(self, name): 
     return self.get(name)
+
+if False: # test code; 
+  dd = dotdict(dict(a="aa", b="bb"))
+  dd.b = "bbb" 
+  dd.c = "cccc" 
+  dd 
+
